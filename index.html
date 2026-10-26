@@ -107,9 +107,10 @@
     $("encerrar").addEventListener("click", () => tl.end());
   });
 </script>
-<!-- ID da main: com a branch Homologação liberada para o widget, as sessões rodam a Homologação (tráfego da telefonia segue na main). -->
+<!-- ID da main + data-branch fixa a Homologação (branch liberada para o widget). Sem data-branch o widget segue o tráfego: 100% main. -->
 <script src="https://api-twolabs.twolabs.app/widget.js"
   data-agent-id="94ea50a9-df05-405c-8efa-b4314c53174e"
+  data-branch="60b70536-752e-41cc-81f1-d8cbe7acb1b6"
   data-title="Rodízio — Homologação"
   async></script>
 </body>
