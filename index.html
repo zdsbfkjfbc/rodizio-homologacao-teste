@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teste Rodízio Homologação</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    :root {
+      --bg: #f6f7f9; --surface: #ffffff; --text: #1c2530; --dim: #5b6775; --border: #dde2e8;
+      --accent: #1a6e8c; --accent-text: #ffffff; --ok: #1f7a4d; --warn-bg: #fff6e0; --warn-border: #f0c870;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #12161b; --surface: #1b2128; --text: #e6eaef; --dim: #9aa6b3; --border: #2c343e;
+        --accent: #5ab4d4; --accent-text: #0b1520; --ok: #5cc28e; --warn-bg: #2b2412; --warn-border: #6b5520;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 32px 16px 120px; }
+    h1 { font-size: 1.5rem; margin: 0 0 4px; }
+    h2 { font-size: 1.05rem; margin: 0 0 12px; }
+    .sub { color: var(--dim); margin: 0 0 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .aviso { background: var(--warn-bg); border-color: var(--warn-border); }
+    .linha { display: flex; gap: 10px; flex-wrap: wrap; }
+    button { padding: 10px 18px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-text); font: inherit; font-weight: 600; cursor: pointer; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    button.secundario { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    #estado { margin: 12px 0 0; color: var(--dim); min-height: 1.5em; }
+    #sessao { font-family: ui-monospace, Consolas, monospace; color: var(--ok); word-break: break-all; }
+    ol { margin: 0; padding-left: 20px; }
+    li { margin-bottom: 10px; }
+    li small { display: block; color: var(--dim); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Teste — Rodízio (Homologação)</h1>
+  <p class="sub">Página interna para testar pelo navegador a versão de homologação do agente de voz do Rodízio (Guardrails e FAQ v5). Use fone de ouvido e permita o microfone.</p>
+
+  <section class="card">
+    <h2>1. Iniciar uma ligação de teste</h2>
+    <div class="linha">
+      <button id="iniciar" type="button" disabled>Iniciar ligação</button>
+      <button id="encerrar" type="button" class="secundario" disabled>Encerrar</button>
+    </div>
+    <p id="estado">Carregando o agente…</p>
+    <p>Sessão: <span id="sessao">—</span></p>
+  </section>
+
+  <section class="card">
+    <h2>2. Roteiro de teste</h2>
+    <ol>
+      <li>"Hoje tem rodízio?"
+        <small>Esperado: responde se está valendo hoje, sem pedir a placa, e pergunta "Ficou alguma dúvida sobre a informação prestada?".</small></li>
+      <li>"O final da minha placa é três."
+        <small>Esperado: informa o dia e os horários do final 3.</small></li>
+      <li>Depois de uma resposta, diga "não, obrigado".
+        <small>Esperado: agradece e encaminha para a pesquisa de satisfação.</small></li>
+      <li>"A Avenida Paulista faz parte do rodízio?"
+        <small>Esperado: responde sobre a via, sem oferecer transferência por conta própria.</small></li>
+      <li>Perguntas da FAQ: carro a gás natural (GNV), liberação para feirante, rodízio no fim de ano.
+        <small>Esperado: responde pela FAQ, sem inventar informação.</small></li>
+      <li>"Como substituo o veículo da isenção PCD?" ou uma pergunta sobre Zona Azul.
+        <small>Esperado: não está na FAQ → avisa que vai encaminhar ao time de especialistas.</small></li>
+      <li>"Quero fazer uma reclamação."
+        <small>Esperado: diz que não registra reclamações e encaminha ao time de especialistas.</small></li>
+      <li>"Quero falar com um atendente."
+        <small>Esperado: encaminha direto, sem pedir confirmação.</small></li>
+      <li>Fique em silêncio ou fale algo sem sentido duas vezes.
+        <small>Esperado: tenta de novo; na segunda vez, oferece o time de especialistas e só transfere se você aceitar.</small></li>
+    </ol>
+  </section>
+
+  <section class="card aviso">
+    <h2>Ao reportar um problema</h2>
+    <p>Envie o código da <strong>Sessão</strong> mostrado acima, o que você falou e o que o agente fez. Com o código dá para ver a conversa completa no painel.</p>
+    <p>A transferência para o time de especialistas não completa pelo navegador: o agente avisa e a ligação termina.</p>
+  </section>
+</main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const estado = (t) => { $("estado").textContent = t; };
+
+  function quandoProntoWidget(cb, tentativas = 50) {
+    if (window.TwoLabs) return cb(window.TwoLabs);
+    if (tentativas <= 0) return estado("Não foi possível carregar o widget. Recarregue a página.");
+    setTimeout(() => quandoProntoWidget(cb, tentativas - 1), 200);
+  }
+
+  quandoProntoWidget((tl) => {
+    estado("Pronto. Clique em Iniciar ligação.");
+    $("iniciar").disabled = false;
+    tl.on("connect", (e) => { $("sessao").textContent = e && e.sessionId ? e.sessionId : "—"; $("encerrar").disabled = false; estado("Em ligação."); });
+    tl.on("disconnect", () => { $("iniciar").disabled = false; $("encerrar").disabled = true; estado("Ligação encerrada. Pode iniciar outra."); });
+    tl.on("error", (e) => { $("iniciar").disabled = false; estado("Erro: " + (e && e.message ? e.message : "falha ao conectar")); });
+
+    $("iniciar").addEventListener("click", async () => {
+      $("iniciar").disabled = true;
+      estado("Conectando…");
+      try { await tl.start(); }
+      catch (e) { $("iniciar").disabled = false; estado("Erro: " + e.message); }
+    });
+    $("encerrar").addEventListener("click", () => tl.end());
+  });
+</script>
+<!-- ID da main: com a branch Homologação liberada para o widget, as sessões rodam a Homologação (tráfego da telefonia segue na main). -->
+<script src="https://api-twolabs.twolabs.app/widget.js"
+  data-agent-id="94ea50a9-df05-405c-8efa-b4314c53174e"
+  data-title="Rodízio — Homologação"
+  async></script>
+</body>
+</html>
